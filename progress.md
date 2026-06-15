@@ -1,0 +1,13 @@
+Original prompt: gamejam platformer with theme "ashen factory", wildcard "a door that remembers", ingredient "a password"; use KAPLAY.js and TypeScript; tilesheet exists in the root dir; get started with a basic controllable platformer and map editing from the tilesheet. User later changed map workflow to use KAPLAY addLevel().
+
+## Progress
+
+- Started a Vite + TypeScript + KAPLAY scaffold.
+- Chosen map workflow: editable `addLevel()` string arrays in source, not Tiled JSON.
+- Implemented the first KAPLAY scene with atlas slicing, `addLevel()` maps, player physics, camera follow, restart, fullscreen, and Playwright-facing test hooks.
+- Playtesting found that holding left could send the player past the map edge before reset; clamped horizontal position and lowered the fall reset threshold to one tile below the map.
+- Verified `npm run build`, in-app browser rendering, and scripted Playwright runs for left movement, right movement, jump, landing, collision, and camera follow.
+
+## TODO
+
+- Next gameplay pass: implement "a door that remembers" and password interaction mechanics.
