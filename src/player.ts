@@ -1,10 +1,12 @@
 import type { GameObj, KAPLAYCtx } from 'kaplay'
 import {
-  PLAYER_COLOR,
   PLAYER_HEIGHT,
+  PLAYER_IDLE_FRAME,
   PLAYER_JUMP_FORCE,
-  PLAYER_OUTLINE_COLOR,
+  PLAYER_SPRITE_SCALE,
   PLAYER_SPEED,
+  PLAYER_WALK_FRAME_SECONDS,
+  PLAYER_WALK_FRAMES,
   PLAYER_WIDTH,
 } from './config'
 import { TILE_SIZE, type TilePoint } from './level'
@@ -18,6 +20,23 @@ export type PlayerState = {
 }
 
 export type SpawnPoint = ReturnType<KAPLAYCtx['vec2']>
+export type PlayerSpriteFrame = {
+  top: string
+  bottom: string
+}
+export type PlayerVisualPart = GameObj & {
+  sprite: string
+}
+export type PlayerVisualState = {
+  top: PlayerVisualPart
+  bottom: PlayerVisualPart
+  elapsed: number
+  frameIndex: number
+  isWalking: boolean
+}
+export type PlayerObject = GameObj & {
+  visualState?: PlayerVisualState
+}
 
 export function getSpawnPoint(k: KAPLAYCtx, spawnTile: TilePoint): SpawnPoint {
   return k.vec2(
@@ -27,15 +46,37 @@ export function getSpawnPoint(k: KAPLAYCtx, spawnTile: TilePoint): SpawnPoint {
 }
 
 export function createPlayer(k: KAPLAYCtx, spawnPoint: SpawnPoint): GameObj {
-  return k.add([
+  const player = k.add([
     k.pos(spawnPoint),
-    k.rect(PLAYER_WIDTH, PLAYER_HEIGHT, { radius: 4 }),
-    k.color(...PLAYER_COLOR),
-    k.outline(3, k.rgb(...PLAYER_OUTLINE_COLOR)),
+    k.rect(PLAYER_WIDTH, PLAYER_HEIGHT, { fill: false }),
     k.area(),
     k.body({ jumpForce: PLAYER_JUMP_FORCE }),
     'player',
-  ])
+  ]) as PlayerObject
+
+  player.visualState = {
+    top: addPlayerSpritePart(k, player, PLAYER_IDLE_FRAME.top, 0),
+    bottom: addPlayerSpritePart(k, player, PLAYER_IDLE_FRAME.bottom, TILE_SIZE),
+    elapsed: 0,
+    frameIndex: 0,
+    isWalking: false,
+  }
+
+  return player
+}
+
+export function addPlayerSpritePart(
+  k: KAPLAYCtx,
+  player: GameObj,
+  spriteName: string,
+  y: number,
+) {
+  return player.add([
+    k.pos(0, y),
+    k.sprite(spriteName),
+    k.scale(PLAYER_SPRITE_SCALE),
+    k.z(20),
+  ]) as PlayerVisualPart
 }
 
 export function resetPlayer(
@@ -61,6 +102,59 @@ export function updatePlayerMovement(
 
   player.move(horizontal * PLAYER_SPEED, 0)
   player.pos.x = k.clamp(player.pos.x, 0, worldWidth - PLAYER_WIDTH)
+  updatePlayerAnimation(k, player as PlayerObject, horizontal !== 0)
+}
+
+export function updatePlayerAnimation(
+  k: KAPLAYCtx,
+  player: PlayerObject,
+  isWalking: boolean,
+) {
+  const visualState = player.visualState
+
+  if (!visualState) {
+    return
+  }
+
+  if (!isWalking) {
+    visualState.elapsed = 0
+    visualState.frameIndex = 0
+    visualState.isWalking = false
+    setPlayerVisualFrame(k, visualState, PLAYER_IDLE_FRAME)
+    return
+  }
+
+  if (!visualState.isWalking) {
+    visualState.elapsed = 0
+    visualState.frameIndex = 0
+    visualState.isWalking = true
+    setPlayerVisualFrame(k, visualState, PLAYER_WALK_FRAMES[0])
+    return
+  }
+
+  visualState.elapsed += k.dt()
+
+  if (visualState.elapsed < PLAYER_WALK_FRAME_SECONDS) {
+    return
+  }
+
+  visualState.elapsed -= PLAYER_WALK_FRAME_SECONDS
+  visualState.frameIndex = (visualState.frameIndex + 1) % PLAYER_WALK_FRAMES.length
+  setPlayerVisualFrame(k, visualState, PLAYER_WALK_FRAMES[visualState.frameIndex])
+}
+
+export function setPlayerVisualFrame(
+  k: KAPLAYCtx,
+  visualState: PlayerVisualState,
+  frame: PlayerSpriteFrame,
+) {
+  if (visualState.top.sprite !== frame.top) {
+    visualState.top.use(k.sprite(frame.top))
+  }
+
+  if (visualState.bottom.sprite !== frame.bottom) {
+    visualState.bottom.use(k.sprite(frame.bottom))
+  }
 }
 
 export function getPlayerState(player: GameObj): PlayerState {

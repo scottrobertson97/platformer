@@ -1,7 +1,8 @@
 import kaplay, { type GameObj } from 'kaplay'
 import './style.css'
 import tilesheetUrl from '../platformerPack_industrial_tilesheet.png?url'
-import { makeTilesheetAtlas } from './atlas'
+import completeSpritesheetUrl from '../spritesheet_complete.png?url'
+import { makeCompleteSpritesheetAtlas, makeTilesheetAtlas } from './atlas'
 import { followPlayerCamera } from './camera'
 import {
   BACKGROUND_COLOR,
@@ -51,6 +52,7 @@ const k = kaplay({
 })
 
 k.loadSpriteAtlas(tilesheetUrl, makeTilesheetAtlas())
+k.loadSpriteAtlas(completeSpritesheetUrl, makeCompleteSpritesheetAtlas())
 k.setGravity(GRAVITY)
 
 let player: GameObj | null = null
