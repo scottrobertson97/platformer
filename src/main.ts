@@ -25,10 +25,12 @@ import {
   updatePlayerMovement,
 } from './player'
 import { registerTestHooks } from './testHooks'
+import { createFactoryTileManager } from './tiles'
 import { addWorld } from './world'
 
 const spawnTile = findTile(SOLID_MAP, '@')
 const solidMap = stripTile(SOLID_MAP, '@')
+const tileManager = createFactoryTileManager()
 const worldWidth = LEVEL_WIDTH * TILE_SIZE
 const worldHeight = LEVEL_HEIGHT * TILE_SIZE
 
@@ -57,7 +59,7 @@ k.scene('factory', () => {
   const spawnPoint = getSpawnPoint(k, spawnTile)
 
   k.setBackground(k.rgb(...BACKGROUND_COLOR))
-  addWorld(k, solidMap)
+  addWorld(k, solidMap, tileManager)
 
   player = createPlayer(k, spawnPoint)
 

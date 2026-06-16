@@ -1,58 +1,41 @@
-import type { CompList, KAPLAYCtx } from 'kaplay'
+import type { KAPLAYCtx } from 'kaplay'
 import { BACKGROUND_MAP, DECOR_MAP, TILE_SIZE } from './level'
+import type { TileManager } from './tileManager'
 
-export function addBackground(k: KAPLAYCtx) {
+export function addBackground(k: KAPLAYCtx, tileManager: TileManager) {
   k.addLevel(BACKGROUND_MAP, {
     tileWidth: TILE_SIZE,
     tileHeight: TILE_SIZE,
-    tiles: {
-      '.': () => [k.sprite('tile-4'), k.opacity(0.36), k.z(-20)],
-    },
+    tiles: tileManager.getLevelTiles(k, 'background'),
   })
 }
 
-export function addSolids(k: KAPLAYCtx, solidMap: string[]) {
+export function addSolids(
+  k: KAPLAYCtx,
+  solidMap: string[],
+  tileManager: TileManager,
+) {
   k.addLevel(solidMap, {
     tileWidth: TILE_SIZE,
     tileHeight: TILE_SIZE,
-    tiles: {
-      '#': () => [
-        k.sprite('tile-42'),
-        k.area(),
-        k.body({ isStatic: true }),
-        k.z(0),
-        'solid',
-      ],
-    },
+    tiles: tileManager.getLevelTiles(k, 'solid'),
   })
 }
 
-export function addDecor(k: KAPLAYCtx) {
+export function addDecor(k: KAPLAYCtx, tileManager: TileManager) {
   k.addLevel(DECOR_MAP, {
     tileWidth: TILE_SIZE,
     tileHeight: TILE_SIZE,
-    tiles: {
-      D: () => decorTile(k, 'tile-69', ['door', 'remembering-door']),
-      P: () => decorTile(k, 'tile-74', ['password']),
-      h: () => decorTile(k, 'tile-51', ['hazard-sign']),
-      p: () => decorTile(k, 'tile-61', ['pipe']),
-      r: () => decorTile(k, 'tile-83', ['route-marker']),
-      s: () => decorTile(k, 'tile-37', ['spikes']),
-      v: () => decorTile(k, 'tile-71', ['valve']),
-    },
+    tiles: tileManager.getLevelTiles(k, 'decor'),
   })
 }
 
-export function addWorld(k: KAPLAYCtx, solidMap: string[]) {
-  addBackground(k)
-  addSolids(k, solidMap)
-  addDecor(k)
-}
-
-export function decorTile(
+export function addWorld(
   k: KAPLAYCtx,
-  spriteName: string,
-  tags: string[],
-): CompList<unknown> {
-  return [k.sprite(spriteName), k.z(10), ...tags]
+  solidMap: string[],
+  tileManager: TileManager,
+) {
+  addBackground(k, tileManager)
+  addSolids(k, solidMap, tileManager)
+  addDecor(k, tileManager)
 }
