@@ -11,12 +11,10 @@ import {
   VIEW_WIDTH,
 } from './config'
 import {
-  LEVEL_HEIGHT,
-  LEVEL_WIDTH,
-  SOLID_MAP,
-  TILE_SIZE,
-  findTile,
-  stripTile,
+  LEVELS,
+  START_LEVEL_IDENTIFIER,
+  getLevelByIdentifier,
+  type GameLevel,
 } from './level'
 import {
   createPlayer,
@@ -26,20 +24,15 @@ import {
   updatePlayerMovement,
 } from './player'
 import { registerTestHooks } from './testHooks'
-import { createFactoryTileManager } from './tiles'
 import { addWorld } from './world'
-
-const spawnTile = findTile(SOLID_MAP, '@')
-const solidMap = stripTile(SOLID_MAP, '@')
-const tileManager = createFactoryTileManager()
-const worldWidth = LEVEL_WIDTH * TILE_SIZE
-const worldHeight = LEVEL_HEIGHT * TILE_SIZE
 
 const root = document.querySelector<HTMLElement>('#game')
 
 if (!root) {
   throw new Error('Missing #game root element')
 }
+
+const initialLevel = getLevelByIdentifier(getInitialLevelIdentifier())
 
 const k = kaplay({
   root,
@@ -55,55 +48,71 @@ k.loadSpriteAtlas(tilesheetUrl, makeTilesheetAtlas())
 k.loadSpriteAtlas(completeSpritesheetUrl, makeCompleteSpritesheetAtlas())
 k.setGravity(GRAVITY)
 
+let activeLevel = initialLevel
 let player: GameObj | null = null
 
-k.scene('factory', () => {
-  const spawnPoint = getSpawnPoint(k, spawnTile)
-
-  k.setBackground(k.rgb(...BACKGROUND_COLOR))
-  addWorld(k, solidMap, tileManager)
-
-  player = createPlayer(k, spawnPoint)
-
-  const resetCurrentPlayer = () => resetPlayer(k, player, spawnPoint)
-
-  k.onKeyPress(['space', 'w', 'up'], () => {
-    if (player?.isGrounded()) {
-      player.jump()
-    }
-  })
-
-  k.onKeyPress('r', resetCurrentPlayer)
-
-  k.onKeyPress('f', () => {
-    k.setFullscreen(!k.isFullscreen())
-  })
-
-  k.onUpdate(() => {
-    if (!player) {
-      return
-    }
-
-    updatePlayerMovement(k, player, worldWidth)
-
-    if (player.pos.y > worldHeight + TILE_SIZE) {
-      resetCurrentPlayer()
-    }
-
-    followPlayerCamera(k, player, worldWidth, worldHeight)
-  })
-})
+for (const level of LEVELS) {
+  registerLevelScene(level)
+}
 
 registerTestHooks({
   k,
   getMapState: () => ({
-    tileSize: TILE_SIZE,
-    columns: LEVEL_WIDTH,
-    rows: LEVEL_HEIGHT,
-    width: worldWidth,
-    height: worldHeight,
+    levelIdentifier: activeLevel.identifier,
+    tileSize: activeLevel.tileSize,
+    columns: activeLevel.columns,
+    rows: activeLevel.rows,
+    width: activeLevel.width,
+    height: activeLevel.height,
   }),
   getPlayerState: () => (player ? getPlayerState(player) : null),
 })
 
-k.go('factory')
+k.go(initialLevel.identifier)
+
+function registerLevelScene(level: GameLevel) {
+  k.scene(level.identifier, () => {
+    activeLevel = level
+    const spawnPoint = getSpawnPoint(k, level.spawnPoint)
+
+    k.setBackground(k.rgb(...BACKGROUND_COLOR))
+    addWorld(k, level)
+
+    player = createPlayer(k, spawnPoint)
+
+    const resetCurrentPlayer = () => resetPlayer(k, player, spawnPoint)
+
+    k.onKeyPress(['space', 'w', 'up'], () => {
+      if (player?.isGrounded()) {
+        player.jump()
+      }
+    })
+
+    k.onKeyPress('r', resetCurrentPlayer)
+
+    k.onKeyPress('f', () => {
+      k.setFullscreen(!k.isFullscreen())
+    })
+
+    k.onUpdate(() => {
+      if (!player) {
+        return
+      }
+
+      updatePlayerMovement(k, player, level.width)
+
+      if (player.pos.y > level.height + level.tileSize) {
+        resetCurrentPlayer()
+      }
+
+      followPlayerCamera(k, player, level.width, level.height)
+    })
+  })
+}
+
+function getInitialLevelIdentifier() {
+  return (
+    new URLSearchParams(window.location.search).get('level') ??
+    START_LEVEL_IDENTIFIER
+  )
+}

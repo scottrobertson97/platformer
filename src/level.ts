@@ -1,73 +1,34 @@
-export const TILE_SIZE = 70
+import levelsProjectJson from '../levels.ldtk?raw'
+import {
+  loadLdtkLevels,
+  type GameLevel,
+} from './ldtk'
 
-export const LEVEL_WIDTH = 38
-export const LEVEL_HEIGHT = 13
+export type { GameLevel, LevelPoint } from './ldtk'
 
-export const BACKGROUND_MAP = [
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-  '......................................',
-]
+const externalLevelJsonByPath = import.meta.glob<string>(
+  '../levels/*.ldtkl',
+  {
+    eager: true,
+    import: 'default',
+    query: '?raw',
+  },
+)
 
-export const SOLID_MAP = [
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '       ####               ####        ',
-  '                         #    #       ',
-  '   @                 ###              ',
-  '#####        ####                     ',
-  '                                      ',
-  '            #######          #####    ',
-  '                                      ',
-  '______________________________________',
-  ',,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
-]
+export const LEVELS = loadLdtkLevels(levelsProjectJson, externalLevelJsonByPath)
+export const START_LEVEL_IDENTIFIER = 'Level_0'
+export const START_LEVEL = getLevelByIdentifier(START_LEVEL_IDENTIFIER)
+export const TILE_SIZE = START_LEVEL.tileSize
 
-export const DECOR_MAP = [
-  '                                      ',
-  '                                      ',
-  '     p                    r           ',
-  '                                      ',
-  '                s     s               ',
-  '                            D         ',
-  '                                      ',
-  '        v          P                  ',
-  '                                      ',
-  '   h                         h        ',
-  '                                      ',
-  '                                      ',
-  '                                      ',
-]
+export function getLevelByIdentifier(identifier: string): GameLevel {
+  const level = LEVELS.find(candidate => candidate.identifier === identifier)
 
-export type TilePoint = {
-  x: number
-  y: number
-}
-
-export function findTile(map: string[], symbol: string): TilePoint {
-  for (let y = 0; y < map.length; y += 1) {
-    const x = map[y].indexOf(symbol)
-
-    if (x >= 0) {
-      return { x, y }
-    }
+  if (!level) {
+    const available = LEVELS.map(candidate => candidate.identifier).join(', ')
+    throw new Error(
+      `Missing level "${identifier}". Available levels: ${available}`,
+    )
   }
 
-  throw new Error(`Missing tile symbol "${symbol}"`)
-}
-
-export function stripTile(map: string[], symbol: string): string[] {
-  return map.map(row => row.replace(symbol, ' '))
+  return level
 }

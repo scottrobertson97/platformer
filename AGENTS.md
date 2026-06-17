@@ -8,7 +8,7 @@ This is a small Vite + TypeScript + KAPLAY platformer prototype for a game jam p
 - Wildcard: `a door that remembers`
 - Ingredient: `a password`
 
-The current goal is a playable industrial platformer with source-editable maps using KAPLAY `addLevel()` arrays. The next gameplay direction in `progress.md` is to implement the remembering door and password interaction mechanics.
+The current goal is a playable industrial platformer with LDtk-authored external levels rendered directly from LDtk `Tiles` layers. The next gameplay direction in `progress.md` is to implement the remembering door and password interaction mechanics.
 
 ## Working Directory
 
@@ -32,14 +32,17 @@ Run `npm run build` before handing off code changes unless the user explicitly a
 - Vite
 - TypeScript with strict compiler settings
 - KAPLAY.js
-- Root tilesheet asset: `platformerPack_industrial_tilesheet.png`
+- Root tilesheet assets: `platformerPack_industrial_tilesheet.png`, `spritesheet_complete.png`
 
 Avoid introducing a new game engine, renderer, bundler, or map pipeline unless the user specifically asks for that change.
 
 ## Source Layout
 
-- `src/main.ts`: KAPLAY setup, scene creation, player movement, camera, atlas slicing, rendering of map layers, and browser/playtest hooks.
-- `src/level.ts`: tile size, level dimensions, editable map strings, and map helper functions.
+- `levels.ldtk`: root LDtk project file.
+- `levels/*.ldtkl`: external LDtk level files.
+- `src/main.ts`: KAPLAY setup, scene creation, player movement, camera, atlas loading, rendering of map layers, and browser/playtest hooks.
+- `src/level.ts`: loads the root LDtk project and external levels, then exports parsed level helpers.
+- `src/ldtk.ts`: small LDtk adapter that exposes LDtk `Tiles` layers and entities to the runtime.
 - `src/style.css`: page and canvas styling.
 - `progress.md`: short project history and current TODOs.
 - `index.html`: Vite entrypoint with the `#game` root.
@@ -55,12 +58,18 @@ Avoid introducing a new game engine, renderer, bundler, or map pipeline unless t
 
 ## Map Editing
 
-The chosen map workflow is source-authored KAPLAY `addLevel()` arrays in `src/level.ts`, not Tiled JSON.
+The chosen map workflow is LDtk project JSON from root `levels.ldtk`, with external level files in `levels/`.
 
-- Keep `BACKGROUND_MAP`, `SOLID_MAP`, and `DECOR_MAP` the same dimensions as `LEVEL_WIDTH` and `LEVEL_HEIGHT`.
-- Use a single-character symbol per tile.
-- Keep the player spawn marker `@` in `SOLID_MAP`; `src/main.ts` strips it before adding solid tiles.
-- When adding new symbols, update the relevant `addLevel()` tile mapping in `src/main.ts`.
+- Keep LDtk external levels enabled; the runtime imports `levels.ldtk` and eager-loads `levels/*.ldtkl`.
+- Keep the runtime-rendered LDtk tile layers on the industrial tileset unless support is intentionally added for another tileset.
+- Required LDtk layers:
+  - `Bg`: background `Tiles` layer.
+  - `Fg`: foreground `Tiles` layer with solid collision.
+  - `Decor`: non-solid decor `Tiles` layer.
+  - `Entities`: contains a `PlayerSpawn` entity.
+- `PlayerSpawn` uses pixel coordinates for the top-left of the player physics body.
+- Scene names match LDtk level identifiers, starting with `Level_0`.
+- To manually test another level, run the dev server and open `/?level=Level_1`.
 - Keep collisions in the solid layer unless there is a clear gameplay reason to do otherwise.
 
 ## Gameplay Conventions
@@ -104,4 +113,3 @@ Use these hooks for Playwright-style smoke tests when practical.
 - Do not revert or overwrite unrelated changes.
 - Keep changes scoped to the requested task.
 - Do not commit, branch, or push unless the user asks.
-

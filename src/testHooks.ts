@@ -2,6 +2,7 @@ import type { KAPLAYCtx } from 'kaplay'
 import type { PlayerState } from './player'
 
 export type MapState = {
+  levelIdentifier: string
   tileSize: number
   columns: number
   rows: number

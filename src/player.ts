@@ -9,7 +9,7 @@ import {
   PLAYER_WALK_FRAMES,
   PLAYER_WIDTH,
 } from './config'
-import { TILE_SIZE, type TilePoint } from './level'
+import { TILE_SIZE, type LevelPoint } from './level'
 
 export type PlayerState = {
   x: number
@@ -41,11 +41,8 @@ export type PlayerObject = GameObj & {
   visualState?: PlayerVisualState
 }
 
-export function getSpawnPoint(k: KAPLAYCtx, spawnTile: TilePoint): SpawnPoint {
-  return k.vec2(
-    spawnTile.x * TILE_SIZE + (TILE_SIZE - PLAYER_WIDTH) / 2,
-    spawnTile.y * TILE_SIZE + TILE_SIZE - PLAYER_HEIGHT,
-  )
+export function getSpawnPoint(k: KAPLAYCtx, spawnPoint: LevelPoint): SpawnPoint {
+  return k.vec2(spawnPoint.x, spawnPoint.y)
 }
 
 export function createPlayer(k: KAPLAYCtx, spawnPoint: SpawnPoint): GameObj {
