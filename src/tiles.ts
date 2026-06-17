@@ -1,4 +1,5 @@
 import { TileManager } from './tileManager'
+import { factoryTile } from './spriteKeys'
 
 export function createFactoryTileManager() {
   return new TileManager()
@@ -6,7 +7,7 @@ export function createFactoryTileManager() {
       id: 'background-panel',
       layer: 'background',
       symbol: '.',
-      sprite: 'tile-4',
+      sprite: factoryTile(4, 0),
       opacity: 0.36,
       z: -20,
     })
@@ -14,7 +15,25 @@ export function createFactoryTileManager() {
       id: 'factory-floor',
       layer: 'solid',
       symbol: '#',
-      sprite: 'tile-42',
+      sprite: factoryTile(0, 3),
+      solid: true,
+      tags: ['solid'],
+      z: 0,
+    })
+    .register({
+      id: 'dirt-floor',
+      layer: 'solid',
+      symbol: '_',
+      sprite: factoryTile(2, 0),
+      solid: true,
+      tags: ['solid'],
+      z: 0,
+    })
+    .register({
+      id: 'background-dirt',
+      layer: 'solid',
+      symbol: ',',
+      sprite: factoryTile(4, 0),
       solid: true,
       tags: ['solid'],
       z: 0,
@@ -23,7 +42,7 @@ export function createFactoryTileManager() {
       id: 'remembering-door',
       layer: 'decor',
       symbol: 'D',
-      sprite: 'tile-69',
+      sprite: factoryTile(13, 4),
       tags: ['door', 'remembering-door'],
       z: 10,
     })
@@ -31,7 +50,7 @@ export function createFactoryTileManager() {
       id: 'password',
       layer: 'decor',
       symbol: 'P',
-      sprite: 'tile-74',
+      sprite: factoryTile(4, 5),
       tags: ['password'],
       z: 10,
     })
@@ -39,7 +58,7 @@ export function createFactoryTileManager() {
       id: 'hazard-sign',
       layer: 'decor',
       symbol: 'h',
-      sprite: 'tile-51',
+      sprite: factoryTile(9, 3),
       tags: ['hazard-sign'],
       z: 10,
     })
@@ -47,7 +66,7 @@ export function createFactoryTileManager() {
       id: 'pipe',
       layer: 'decor',
       symbol: 'p',
-      sprite: 'tile-61',
+      sprite: factoryTile(5, 4),
       tags: ['pipe'],
       z: 10,
     })
@@ -55,7 +74,7 @@ export function createFactoryTileManager() {
       id: 'route-marker',
       layer: 'decor',
       symbol: 'r',
-      sprite: 'tile-83',
+      sprite: factoryTile(13, 5),
       tags: ['route-marker'],
       z: 10,
     })
@@ -63,7 +82,7 @@ export function createFactoryTileManager() {
       id: 'spikes',
       layer: 'decor',
       symbol: 's',
-      sprite: 'tile-37',
+      sprite: factoryTile(9, 2),
       tags: ['spikes'],
       z: 10,
     })
@@ -71,7 +90,7 @@ export function createFactoryTileManager() {
       id: 'valve',
       layer: 'decor',
       symbol: 'v',
-      sprite: 'tile-71',
+      sprite: factoryTile(1, 5),
       tags: ['valve'],
       z: 10,
     })

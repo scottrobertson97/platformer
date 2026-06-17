@@ -9,6 +9,7 @@ import {
   COMPLETE_ATLAS_TILE_SIZE,
 } from './config'
 import { TILE_SIZE } from './level'
+import { spriteKey } from './spriteKeys'
 
 export function makeTilesheetAtlas(): SpriteAtlasData {
   return makeGridAtlas({
@@ -49,9 +50,7 @@ export function makeGridAtlas({
 
   for (let row = 0; row < rows; row += 1) {
     for (let column = 0; column < columns; column += 1) {
-      const id = row * columns + column
-
-      atlas[`${spritePrefix}-${id}`] = {
+      atlas[spriteKey(spritePrefix, column, row)] = {
         x: column * tileSize * xCoordinateScale,
         y: row * tileSize,
         width: tileSize * xCoordinateScale,

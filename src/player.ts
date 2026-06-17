@@ -24,12 +24,15 @@ export type PlayerSpriteFrame = {
   top: string
   bottom: string
 }
+export type PlayerFacing = 'left' | 'right'
 export type PlayerVisualPart = GameObj & {
   sprite: string
+  flipX: boolean
 }
 export type PlayerVisualState = {
   top: PlayerVisualPart
   bottom: PlayerVisualPart
+  facing: PlayerFacing
   elapsed: number
   frameIndex: number
   isWalking: boolean
@@ -57,6 +60,7 @@ export function createPlayer(k: KAPLAYCtx, spawnPoint: SpawnPoint): GameObj {
   player.visualState = {
     top: addPlayerSpritePart(k, player, PLAYER_IDLE_FRAME.top, 0),
     bottom: addPlayerSpritePart(k, player, PLAYER_IDLE_FRAME.bottom, TILE_SIZE),
+    facing: 'right',
     elapsed: 0,
     frameIndex: 0,
     isWalking: false,
@@ -99,10 +103,33 @@ export function updatePlayerMovement(
 ) {
   const horizontal =
     Number(k.isKeyDown(['d', 'right'])) - Number(k.isKeyDown(['a', 'left']))
+  const playerObject = player as PlayerObject
 
   player.move(horizontal * PLAYER_SPEED, 0)
   player.pos.x = k.clamp(player.pos.x, 0, worldWidth - PLAYER_WIDTH)
-  updatePlayerAnimation(k, player as PlayerObject, horizontal !== 0)
+  updatePlayerFacing(playerObject, horizontal)
+  updatePlayerAnimation(k, playerObject, horizontal !== 0)
+}
+
+export function updatePlayerFacing(player: PlayerObject, horizontal: number) {
+  const visualState = player.visualState
+
+  if (!visualState || horizontal === 0) {
+    return
+  }
+
+  setPlayerFacing(visualState, horizontal < 0 ? 'left' : 'right')
+}
+
+export function setPlayerFacing(
+  visualState: PlayerVisualState,
+  facing: PlayerFacing,
+) {
+  visualState.facing = facing
+
+  const flipX = facing === 'left'
+  visualState.top.flipX = flipX
+  visualState.bottom.flipX = flipX
 }
 
 export function updatePlayerAnimation(
@@ -155,6 +182,8 @@ export function setPlayerVisualFrame(
   if (visualState.bottom.sprite !== frame.bottom) {
     visualState.bottom.use(k.sprite(frame.bottom))
   }
+
+  setPlayerFacing(visualState, visualState.facing)
 }
 
 export function getPlayerState(player: GameObj): PlayerState {

@@ -1,4 +1,9 @@
 import { TILE_SIZE } from './level'
+import {
+  COMPLETE_SPRITE_PREFIX,
+  FACTORY_TILE_PREFIX,
+  completeSprite,
+} from './spriteKeys'
 
 export const VIEW_WIDTH = 960
 export const VIEW_HEIGHT = 540
@@ -12,25 +17,25 @@ export const PLAYER_HEIGHT = TILE_SIZE * 2
 
 export const ATLAS_COLUMNS = 14
 export const ATLAS_ROWS = 8
-export const ATLAS_SPRITE_PREFIX = 'tile'
+export const ATLAS_SPRITE_PREFIX = FACTORY_TILE_PREFIX
 
 export const COMPLETE_ATLAS_COLUMNS = 32
 export const COMPLETE_ATLAS_ROWS = 16
 export const COMPLETE_ATLAS_TILE_SIZE = 128
-export const COMPLETE_ATLAS_SPRITE_PREFIX = 'spritesheet'
+export const COMPLETE_ATLAS_SPRITE_PREFIX = COMPLETE_SPRITE_PREFIX
 
 export const PLAYER_IDLE_FRAME = {
-  top: 'spritesheet-68',
-  bottom: 'spritesheet-100',
+  top: completeSprite(4, 2),
+  bottom: completeSprite(4, 3),
 } as const
 export const PLAYER_WALK_FRAMES = [
   {
-    top: 'spritesheet-67',
-    bottom: 'spritesheet-99',
+    top: completeSprite(3, 2),
+    bottom: completeSprite(3, 3),
   },
   {
-    top: 'spritesheet-137',
-    bottom: 'spritesheet-163',
+    top: completeSprite(3, 4),
+    bottom: completeSprite(3, 5),
   },
 ] as const
 export const PLAYER_WALK_FRAME_SECONDS = 0.14
