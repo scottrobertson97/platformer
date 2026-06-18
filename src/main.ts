@@ -3,7 +3,11 @@ import './style.css'
 import tilesheetUrl from '../platformerPack_industrial_tilesheet.png?url'
 import completeSpritesheetUrl from '../spritesheet_complete.png?url'
 import { makeCompleteSpritesheetAtlas, makeTilesheetAtlas } from './atlas'
-import { followPlayerCamera } from './camera'
+import {
+  followPlayerCamera,
+  getCameraState,
+  snapCameraToPlayer,
+} from './camera'
 import {
   BACKGROUND_COLOR,
   GRAVITY,
@@ -23,6 +27,7 @@ import {
   resetPlayer,
   updatePlayerMovement,
 } from './player'
+import { createPauseMenu } from './pauseMenu'
 import { registerTestHooks } from './testHooks'
 import { TITLE_SCENE, createTitleScreen } from './titleScreen'
 import { addWorld } from './world'
@@ -61,6 +66,11 @@ const titleScreen = createTitleScreen({
   selectedLevelIdentifier: initialLevel.identifier,
   onSelectLevel: startLevel,
 })
+const pauseMenu = createPauseMenu({
+  root,
+  onResume: resumeGame,
+  onLevelSelect: exitToLevelSelect,
+})
 
 registerTitleScene()
 for (const level of LEVELS) {
@@ -78,7 +88,9 @@ registerTestHooks({
     height: activeLevel.height,
   }),
   getPlayerState: () => (player ? getPlayerState(player) : null),
+  getCameraState: () => getCameraState(k),
   getMenuState: titleScreen.getState,
+  getPauseState: pauseMenu.getState,
 })
 
 k.go(hasInitialLevelQuery ? initialLevel.identifier : TITLE_SCENE)
@@ -87,6 +99,8 @@ function registerTitleScene() {
   k.scene(TITLE_SCENE, () => {
     activeLevel = selectedLevel
     player = null
+    pauseMenu.hide()
+    k.debug.paused = false
 
     k.setBackground(k.rgb(...BACKGROUND_COLOR))
     k.setCamPos(selectedLevel.width / 2, selectedLevel.height / 2)
@@ -100,6 +114,8 @@ function registerLevelScene(level: GameLevel) {
     activeLevel = level
     selectedLevel = level
     titleScreen.hide()
+    pauseMenu.hide()
+    k.debug.paused = false
     focusGameCanvas()
     const spawnPoint = getSpawnPoint(k, level.spawnPoint)
 
@@ -107,28 +123,48 @@ function registerLevelScene(level: GameLevel) {
     addWorld(k, level)
 
     player = createPlayer(k, spawnPoint)
+    snapCameraToPlayer(k, player, level.width, level.height)
 
-    const resetCurrentPlayer = () => resetPlayer(k, player, spawnPoint)
+    const resetCurrentPlayer = () => {
+      resetPlayer(k, player, spawnPoint)
+
+      if (player) {
+        snapCameraToPlayer(k, player, level.width, level.height)
+      }
+    }
 
     k.onKeyPress(['space', 'w', 'up'], () => {
+      if (pauseMenu.getState().visible) {
+        return
+      }
+
       if (player?.isGrounded()) {
         player.jump()
       }
     })
 
-    k.onKeyPress('r', resetCurrentPlayer)
+    k.onKeyPress('r', () => {
+      if (pauseMenu.getState().visible) {
+        return
+      }
+
+      resetCurrentPlayer()
+    })
 
     k.onKeyPress('f', () => {
+      if (pauseMenu.getState().visible) {
+        return
+      }
+
       k.setFullscreen(!k.isFullscreen())
     })
 
     k.onKeyPress('escape', () => {
-      clearLevelQuery()
-      k.go(TITLE_SCENE)
+      togglePause(level.identifier)
     })
 
     k.onUpdate(() => {
-      if (!player) {
+      if (!player || pauseMenu.getState().visible) {
         return
       }
 
@@ -147,9 +183,38 @@ function startLevel(identifier: string) {
   selectedLevel = getLevelByIdentifier(identifier)
   activeLevel = selectedLevel
   titleScreen.hide()
+  pauseMenu.hide()
+  k.debug.paused = false
   setLevelQuery(identifier)
   k.go(identifier)
   focusGameCanvas()
+}
+
+function togglePause(levelIdentifier: string) {
+  if (pauseMenu.getState().visible) {
+    resumeGame()
+    return
+  }
+
+  pauseGame(levelIdentifier)
+}
+
+function pauseGame(levelIdentifier: string) {
+  pauseMenu.show(levelIdentifier)
+  k.debug.paused = true
+}
+
+function resumeGame() {
+  pauseMenu.hide()
+  k.debug.paused = false
+  focusGameCanvas()
+}
+
+function exitToLevelSelect() {
+  pauseMenu.hide()
+  k.debug.paused = false
+  clearLevelQuery()
+  k.go(TITLE_SCENE)
 }
 
 function getInitialLevelIdentifier() {

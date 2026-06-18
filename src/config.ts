@@ -41,4 +41,6 @@ export const PLAYER_WALK_FRAMES = [
 export const PLAYER_WALK_FRAME_SECONDS = 0.14
 export const PLAYER_SPRITE_SCALE = TILE_SIZE / COMPLETE_ATLAS_TILE_SIZE
 
+export const CAMERA_HORIZONTAL_SAFEZONE_RATIO = 0.4
+
 export const BACKGROUND_COLOR: [number, number, number] = [22, 26, 28]
