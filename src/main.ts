@@ -24,6 +24,7 @@ import {
   updatePlayerMovement,
 } from './player'
 import { registerTestHooks } from './testHooks'
+import { TITLE_SCENE, createTitleScreen } from './titleScreen'
 import { addWorld } from './world'
 
 const root = document.querySelector<HTMLElement>('#game')
@@ -32,6 +33,9 @@ if (!root) {
   throw new Error('Missing #game root element')
 }
 
+const hasInitialLevelQuery = new URLSearchParams(window.location.search).has(
+  'level',
+)
 const initialLevel = getLevelByIdentifier(getInitialLevelIdentifier())
 
 const k = kaplay({
@@ -48,9 +52,17 @@ k.loadSpriteAtlas(tilesheetUrl, makeTilesheetAtlas())
 k.loadSpriteAtlas(completeSpritesheetUrl, makeCompleteSpritesheetAtlas())
 k.setGravity(GRAVITY)
 
+let selectedLevel = initialLevel
 let activeLevel = initialLevel
 let player: GameObj | null = null
+const titleScreen = createTitleScreen({
+  root,
+  levels: LEVELS,
+  selectedLevelIdentifier: initialLevel.identifier,
+  onSelectLevel: startLevel,
+})
 
+registerTitleScene()
 for (const level of LEVELS) {
   registerLevelScene(level)
 }
@@ -66,13 +78,29 @@ registerTestHooks({
     height: activeLevel.height,
   }),
   getPlayerState: () => (player ? getPlayerState(player) : null),
+  getMenuState: titleScreen.getState,
 })
 
-k.go(initialLevel.identifier)
+k.go(hasInitialLevelQuery ? initialLevel.identifier : TITLE_SCENE)
+
+function registerTitleScene() {
+  k.scene(TITLE_SCENE, () => {
+    activeLevel = selectedLevel
+    player = null
+
+    k.setBackground(k.rgb(...BACKGROUND_COLOR))
+    k.setCamPos(selectedLevel.width / 2, selectedLevel.height / 2)
+    addWorld(k, selectedLevel)
+    titleScreen.show(selectedLevel.identifier)
+  })
+}
 
 function registerLevelScene(level: GameLevel) {
   k.scene(level.identifier, () => {
     activeLevel = level
+    selectedLevel = level
+    titleScreen.hide()
+    focusGameCanvas()
     const spawnPoint = getSpawnPoint(k, level.spawnPoint)
 
     k.setBackground(k.rgb(...BACKGROUND_COLOR))
@@ -94,6 +122,11 @@ function registerLevelScene(level: GameLevel) {
       k.setFullscreen(!k.isFullscreen())
     })
 
+    k.onKeyPress('escape', () => {
+      clearLevelQuery()
+      k.go(TITLE_SCENE)
+    })
+
     k.onUpdate(() => {
       if (!player) {
         return
@@ -110,9 +143,42 @@ function registerLevelScene(level: GameLevel) {
   })
 }
 
+function startLevel(identifier: string) {
+  selectedLevel = getLevelByIdentifier(identifier)
+  activeLevel = selectedLevel
+  titleScreen.hide()
+  setLevelQuery(identifier)
+  k.go(identifier)
+  focusGameCanvas()
+}
+
 function getInitialLevelIdentifier() {
   return (
     new URLSearchParams(window.location.search).get('level') ??
     START_LEVEL_IDENTIFIER
   )
+}
+
+function setLevelQuery(identifier: string) {
+  const url = new URL(window.location.href)
+  url.searchParams.set('level', identifier)
+  window.history.replaceState(
+    null,
+    '',
+    `${url.pathname}${url.search}${url.hash}`,
+  )
+}
+
+function clearLevelQuery() {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('level')
+  window.history.replaceState(
+    null,
+    '',
+    `${url.pathname}${url.search}${url.hash}`,
+  )
+}
+
+function focusGameCanvas() {
+  k.canvas.focus()
 }

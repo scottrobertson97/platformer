@@ -43,6 +43,7 @@ Avoid introducing a new game engine, renderer, bundler, or map pipeline unless t
 - `src/main.ts`: KAPLAY setup, scene creation, player movement, camera, atlas loading, rendering of map layers, and browser/playtest hooks.
 - `src/level.ts`: loads the root LDtk project and external levels, then exports parsed level helpers.
 - `src/ldtk.ts`: small LDtk adapter that exposes LDtk `Tiles` layers and entities to the runtime.
+- `src/titleScreen.ts`: DOM title screen and level-selection controls.
 - `src/style.css`: page and canvas styling.
 - `progress.md`: short project history and current TODOs.
 - `index.html`: Vite entrypoint with the `#game` root.
@@ -72,6 +73,14 @@ The chosen map workflow is LDtk project JSON from root `levels.ldtk`, with exter
 - To manually test another level, run the dev server and open `/?level=Level_1`.
 - Keep collisions in the solid layer unless there is a clear gameplay reason to do otherwise.
 
+## Screen Flow
+
+- The game starts at the `title` scene when no `?level=` query is provided.
+- The title screen renders level-selection buttons from parsed LDtk levels.
+- Selecting a level starts the matching KAPLAY scene and updates `?level=...`.
+- During gameplay, `escape` returns to the title screen.
+- Direct `?level=Level_1` links still start that level immediately for smoke tests and sharing.
+
 ## Gameplay Conventions
 
 - Existing controls:
@@ -79,6 +88,7 @@ The chosen map workflow is LDtk project JSON from root `levels.ldtk`, with exter
   - Jump: `w`, up arrow, space
   - Restart: `r`
   - Fullscreen: `f`
+  - Return to title: escape
 - Maintain the current platformer feel unless the task is specifically about tuning movement.
 - When adding mechanics, make them readable in the simple playtest hooks. Extend `window.render_game_to_text` with stable state when tests or future agents need to inspect behavior.
 - For the "door that remembers" and password mechanics, prefer a minimal playable loop first: interaction state, clear feedback, and deterministic behavior that can be tested.
@@ -93,6 +103,8 @@ npm run build
 
 For gameplay changes, also run the app in a browser and verify:
 
+- The title screen renders.
+- Each listed level can be selected.
 - The canvas renders.
 - The player can move, jump, land, and restart.
 - Camera follow still works.

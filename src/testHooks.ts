@@ -1,5 +1,6 @@
 import type { KAPLAYCtx } from 'kaplay'
 import type { PlayerState } from './player'
+import type { TitleScreenState } from './titleScreen'
 
 export type MapState = {
   levelIdentifier: string
@@ -14,12 +15,14 @@ export type TestHookOptions = {
   k: KAPLAYCtx
   getMapState: () => MapState
   getPlayerState: () => PlayerState | null
+  getMenuState: () => TitleScreenState
 }
 
 export function registerTestHooks({
   k,
   getMapState,
   getPlayerState,
+  getMenuState,
 }: TestHookOptions) {
   window.render_game_to_text = () =>
     JSON.stringify({
@@ -27,11 +30,17 @@ export function registerTestHooks({
       scene: k.getSceneName(),
       map: getMapState(),
       player: getPlayerState(),
+      menu: getMenuState(),
       controls: {
         move: ['a', 'd', 'left', 'right'],
         jump: ['w', 'up', 'space'],
         restart: 'r',
         fullscreen: 'f',
+        menu: {
+          select: ['up', 'down', 'left', 'right'],
+          start: 'enter',
+          title: 'escape',
+        },
       },
     })
 

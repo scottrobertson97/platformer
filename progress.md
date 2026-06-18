@@ -8,6 +8,7 @@ Original prompt: gamejam platformer with theme "ashen factory", wildcard "a door
 - Playtesting found that holding left could send the player past the map edge before reset; clamped horizontal position and lowered the fall reset threshold to one tile below the map.
 - Verified `npm run build`, in-app browser rendering, and scripted Playwright runs for left movement, right movement, jump, landing, collision, and camera follow.
 - Added an LDtk adapter that exposes named `Tiles` layers and a `PlayerSpawn` entity to the KAPLAY runtime without inline text maps.
+- Added a title scene with DOM level-selection buttons generated from the parsed LDtk levels.
 
 ## TODO
 
